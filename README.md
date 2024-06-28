@@ -1,0 +1,2 @@
+# LMI_AI_Solutions
+https://github.com/lmitechnologies/LMI_AI_Solutions/commit/bf74dc461a7a611ca057e7446c6ea0c9d3f6de0b
