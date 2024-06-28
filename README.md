@@ -8,6 +8,10 @@ Currently, the following submodules are included in the repo:
 - [tf-trt](https://github.com/tensorflow/tensorrt.git)
 - [tensorrtx](https://github.com/lmitechnologies/tensorrtx.git)
 
+---
+https://github.com/lmitechnologies/LMI_AI_Solutions/commit/bf74dc461a7a611ca057e7446c6ea0c9d3f6de0b  
+
+---
 ## Clone this master repo
 For users who haven't set up the ssh keys
 ```bash
