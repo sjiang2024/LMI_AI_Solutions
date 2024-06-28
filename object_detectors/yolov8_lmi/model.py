@@ -12,6 +12,7 @@ from typing import Union
 from ultralytics.utils import ops
 from ultralytics.nn.tasks import attempt_load_weights
 
+debug_model = 1
 
 class FileType(str, Enum):
     ENGINE = '.engine'
@@ -180,7 +181,8 @@ class Yolov8:
             imgsz = list(imgsz)
         if self.imgsz and self.imgsz != imgsz:
             raise Exception(f'The warmup imgsz of {imgsz} does not match with the size of the model: {self.imgsz}!')
-            
+        if 0<debug_model: print(f'warmup.184.imgsz={self.imgsz}')
+        
         imgsz = [1,3]+imgsz
         im = torch.empty(*imgsz, dtype=torch.half if self.fp16 else torch.float, device=self.device)  # input
         self.forward(im)  # warmup
@@ -288,6 +290,10 @@ class Yolov8:
                 masks = ops.process_mask_native(proto[i], pred[:, 6:], pred[:, :4], orig_img.shape[:2])
                 masks = masks[M]
                 results['masks'].append(masks.cpu().numpy())
+                if 0<debug_model: 
+                    print(f'model.294.orig_img.shape[:2]={orig_img.shape[:2]}')
+                    print(f'model.295.masks.shape={masks.shape}')
+                    print(f'model.296: self.imgsz={self.imgsz}')
                 if return_segments:
                     segments = [ops.scale_coords(masks.shape[1:], x, orig_img.shape, normalize=False) 
                                 for x in ops.masks2segments(masks)]
