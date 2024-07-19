@@ -2,14 +2,18 @@
 This is the tutorial walking through how to train and test YOLOv8 models. This tutorial assumes that the training and testing processes are running in a **x86** system.
 
 ## System requirements
+- [Docker Engine](https://docs.docker.com/engine/install)
+- [VGG Image Annotator](https://www.robots.ox.ac.uk/~vgg/software/via/)
+
 ### Model training
 - x86 system
-- CUDA 12.1
-- ubuntu 20.04
+- CUDA >= 12.1
+- ubuntu
 
 ### TensorRT engine generation if the model needs to be deployed on Nvidia Jetson devices
 - arm system
 - JetPack 5.0.2
+- JetPack 5.1
 
 ## Directory structure
 The folder structure below will be created when we go through the tutorial. By convention, we use today's date (i.e. 2023-07-19) as the file name.
@@ -33,7 +37,10 @@ The folder structure below will be created when we go through the tutorial. By c
 ├── docker-compose_train.yaml
 ├── docker-compose_predict.yaml
 ├── docker-compose_trt.yaml
+├── docker-compose_trt.x86.yaml
 ├── dockerfile
+├── docker-compose_trt.arm.yaml   # arm system
+├── arm.dockerfile                # arm system
 ```
 
 
@@ -212,6 +219,7 @@ services:
 
 ```
 
+### Start training
 Spin up the docker containers to train the model as shown in [spin-up-the-container](#spin-up-the-container). **Ensure to load the `docker-compose_train.yaml` instead.** By default, once the training is done, the cmd.py script will create a folder named by today's date in `training` folder, i.e. `training/2023-07-19`.
 
 ## Monitor the training progress (optional)
@@ -311,6 +319,8 @@ nms: False  # (bool) CoreML: add NMS
 # more hyperparameters: https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/default.yaml
 ```
 
+### Engine Generation on x86 systems
+
 Create a docker-compose file `./docker-compose_trt.yaml`:
 ```yaml
 version: "3.9"
@@ -336,8 +346,46 @@ services:
 
 ```
 
-If the deployment platform is arm based, use the arm dockerfile instead. Here is the dockerfile that works in Nvidia Jetson JP 5.0.2:
-https://github.com/lmitechnologies/LMI_AI_Solutions/blob/ais/object_detectors/yolov8_lmi/docker/arm.dockerfile
+#### Start generation
+Spin up the container as shown in [spin-up-the-container](#spin-up-the-container). **Ensure to load the `docker-compose_trt.x86.yaml`.** Then, the tensorRT engine is generated in `./training/2023-07-19/weights`.
 
 
-Spin up the container as shown in [spin-up-the-container](#spin-up-the-container). **Ensure to load the `docker-compose_trt.yaml` instead.** Then, the tensorRT engine is generated in `./training/2023-07-19/weights`.
+### Engine Generation on arm systems
+Create a file `./arm.dockerfile`.
+```docker
+# jetpack 5.1
+FROM --platform=linux/arm64/v8 nvcr.io/nvidia/l4t-ml:r35.2.1-py3
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies
+RUN python3 -m pip install pip --upgrade
+RUN pip3 install --upgrade setuptools wheel
+RUN pip3 install opencv-python --user
+RUN pip3 install ultralytics -U
+
+# clone AIS
+WORKDIR /repos
+RUN git clone https://github.com/lmitechnologies/LMI_AI_Solutions.git
+```
+
+Create a file `./docker-compose_trt.arm.yaml`,
+```yaml
+version: "3.9"
+services:
+  yolov8_trt:
+    container_name: yolov8_trt
+    build:
+      context: .
+      dockerfile: arm.dockerfile
+    ipc: host
+    runtime: nvidia
+    volumes:
+      - ./training/2023-07-19/weights:/app/trained-inference-models   # contains a best.pt
+      - ./config/2023-07-19_trt.yaml:/app/config/hyp.yaml  # customized hyperparameters
+    command: >
+      python3 /repos/LMI_AI_Solutions/object_detectors/yolov8_lmi/cmd.py
+```
+
+#### Start generation
+Spin up the container as shown in [spin-up-the-container](#spin-up-the-container). Ensure to load the `./docker-compose_trt.arm.yaml`. The output engines are saved in `./training/2023-07-19/weights`.
+
