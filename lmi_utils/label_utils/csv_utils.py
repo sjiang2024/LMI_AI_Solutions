@@ -94,7 +94,9 @@ def write_to_csv(shapes:dict, filename:str):
         shape(dict): a dictionary maps the filename to a list of Mask or Rect objects, i.e., <filename, list of Mask or Rect>
         filename(str): the output csv filename
     """
-    with open(filename, 'w') as f:
+    # commit 486521e on 3/7/24: append if file exists
+    # https://github.com/lmitechnologies/LMI_AI_Solutions/commit/486521ea58a2cc7b5d663c54882be542dd0798a1
+    with open(filename, 'a+') as f:
         writer = csv.writer(f, delimiter=';')
         for im_name in shapes:
             for shape in shapes[im_name]:
