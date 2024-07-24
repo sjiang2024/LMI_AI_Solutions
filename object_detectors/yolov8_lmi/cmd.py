@@ -100,7 +100,7 @@ if __name__=='__main__':
     #        check_keys['source']=False 
     elif hyp['mode'] == 'export':
         tmp = {'model':path_wts}
-                check_keys['model'] = True
+        check_keys['model'] = True
     elif hyp['mode'] == 'predict':
         tmp = {'model':path_wts, 'source':SOURCE_PATH, 'project':PREDICT_FOLDER}
         check_keys['source'] = False
